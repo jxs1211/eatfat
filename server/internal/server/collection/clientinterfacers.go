@@ -1,6 +1,8 @@
 package objects
 
-import "sync"
+import (
+	"sync"
+)
 
 // A generic, thread-safe map of objects with auto-incrementing IDs.
 type SharedCollection[T any] struct {
@@ -30,6 +32,8 @@ func (s *SharedCollection[T]) Add(obj T, id ...uint64) uint64 {
 	s.mapMux.Lock()
 	defer s.mapMux.Unlock()
 
+	// create a user id randomly
+	// thisId := rand.Uint64()
 	thisId := s.nextId
 	if len(id) > 0 {
 		thisId = id[0]
