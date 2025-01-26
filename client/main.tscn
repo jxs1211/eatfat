@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://main.gd" id="1_3hcou"]
 [ext_resource type="Script" path="res://classes/log/log.gd" id="2_21v0r"]
 
-[node name="Node2D" type="Control"]
+[node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,18 +17,18 @@ grow_vertical = 2
 script = ExtResource("1_3hcou")
 
 [node name="Log" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(0, 300)
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 2.0
-offset_top = 37.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 script = ExtResource("2_21v0r")
 
 [node name="LineEdit" type="LineEdit" parent="."]
 layout_mode = 0
-offset_left = 15.0
-offset_right = 1143.0
+offset_left = 3.0
+offset_right = 1154.0
 offset_bottom = 31.0

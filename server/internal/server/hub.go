@@ -8,32 +8,36 @@ import (
 	"github.com/jxs1211/eatfat/pkg/packets"
 )
 
+// A structure for a state machine to process the client's messages
+type ClientStateHandler interface {
+	Name() string
+	// Inject the client into the state handler
+	SetClient(client ClientInterfacer)
+	OnEnter()
+	HandleMessage(senderId uint64, message packets.Msg)
+	// Cleanup the state handler and perform any last actions
+	OnExit()
+}
+
 // A structure for the connected client to interface with the hub
 type ClientInterfacer interface {
 	Id() uint64
 	ProcessMessage(senderId uint64, message packets.Msg)
-
+	SetState(newState ClientStateHandler)
 	// Sets the client's ID and anything else that needs to be initialized
 	Initialize(id uint64)
-
 	// Puts data from this client in the write pump
 	SocketSend(message packets.Msg)
-
 	// Puts data from another client in the write pump
 	SocketSendAs(message packets.Msg, senderId uint64)
-
 	// Forward message to another client for processing
 	PassToPeer(message packets.Msg, peerId uint64)
-
 	// Forward message to all other clients for processing
 	Broadcast(message packets.Msg)
-
 	// Pump data from the connected socket directly to the client
 	ReadPump()
-
 	// Pump data from the client directly to the connected socket
 	WritePump()
-
 	// Close the client's connections and cleanup
 	Close(reason string)
 }

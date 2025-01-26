@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jxs1211/eatfat/internal/server"
+	"github.com/jxs1211/eatfat/internal/server/states"
 	"github.com/jxs1211/eatfat/pkg/packets"
 	"google.golang.org/protobuf/proto"
 
@@ -18,6 +19,7 @@ type WebSocketClient struct {
 	hub      *server.Hub
 	sendChan chan *packets.Packet
 	logger   *log.Logger
+	state    server.ClientStateHandler
 }
 
 func NewWebSocketClient(hub *server.Hub, writer http.ResponseWriter, request *http.Request) (server.ClientInterfacer, error) {
@@ -43,11 +45,30 @@ func NewWebSocketClient(hub *server.Hub, writer http.ResponseWriter, request *ht
 	return c, nil
 }
 
+func (c *WebSocketClient) SetState(state server.ClientStateHandler) {
+	prevStateName := "None"
+	if c.state != nil {
+		prevStateName = c.state.Name()
+		c.state.OnExit()
+	}
+	newStateName := "None"
+	if state != nil {
+		newStateName = state.Name()
+	}
+	c.logger.Printf("Switching from state %s to %s", prevStateName, newStateName)
+	c.state = state
+	if c.state != nil {
+		c.state.SetClient(c)
+		c.state.OnEnter()
+	}
+}
+
 func (c *WebSocketClient) Initialize(id uint64) {
 	c.id = id
 	c.logger.SetPrefix(fmt.Sprintf("Client %d: ", id))
-	c.SocketSend(packets.NewId(c.id))
+	// c.SocketSend(packets.NewId(c.id))
 	c.logger.Printf("Sent ID %d to client", c.id)
+	c.SetState(&states.Connected{})
 }
 
 func (c *WebSocketClient) Broadcast(message packets.Msg) {
@@ -62,6 +83,7 @@ func (c *WebSocketClient) Close(reason string) {
 	if _, closed := <-c.sendChan; !closed {
 		close(c.sendChan)
 	}
+	c.SetState(nil)
 }
 
 func (c *WebSocketClient) Id() uint64 {
@@ -75,15 +97,7 @@ func (c *WebSocketClient) PassToPeer(message packets.Msg, peerId uint64) {
 }
 
 func (c *WebSocketClient) ProcessMessage(senderId uint64, message packets.Msg) {
-	c.logger.Printf("Received message: %T from client - echoing back...", message)
-	if senderId == c.id {
-		// This message was sent by our own client, so broadcast it to everyone else
-		c.Broadcast(message)
-	} else {
-		// Another client interfacer passed this onto us, or it was broadcast from the hub,
-		// so forward it directly to our own client
-		c.SocketSendAs(message, senderId)
-	}
+	c.state.HandleMessage(senderId, message)
 }
 
 func (c *WebSocketClient) ReadPump() {
