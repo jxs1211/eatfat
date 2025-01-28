@@ -1,4 +1,4 @@
-.PHONY: build run test clean
+.PHONY: build run test clean protoc
 
 # Build the server
 build:
@@ -15,3 +15,7 @@ test:
 # Clean build artifacts
 clean:
 	rm -rf bin/ 
+
+# Run the protoc to generate the go code from the proto file
+protoc:
+	protoc -I="shared" --go_out="server" "shared/packets.proto"

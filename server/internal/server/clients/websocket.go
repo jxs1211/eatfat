@@ -7,10 +7,11 @@ import (
 
 	"github.com/jxs1211/eatfat/internal/server"
 	"github.com/jxs1211/eatfat/internal/server/states"
+	pkglog "github.com/jxs1211/eatfat/pkg/log"
 	"github.com/jxs1211/eatfat/pkg/packets"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
 )
 
 type WebSocketClient struct {
@@ -20,6 +21,7 @@ type WebSocketClient struct {
 	sendChan chan *packets.Packet
 	logger   *log.Logger
 	state    server.ClientStateHandler
+	dbTx     *server.DbTx
 }
 
 func NewWebSocketClient(hub *server.Hub, writer http.ResponseWriter, request *http.Request) (server.ClientInterfacer, error) {
@@ -38,11 +40,20 @@ func NewWebSocketClient(hub *server.Hub, writer http.ResponseWriter, request *ht
 	c := &WebSocketClient{
 		hub:      hub,
 		conn:     conn,
+		dbTx:     hub.NewDbTx(),
 		sendChan: make(chan *packets.Packet, 256),
-		logger:   log.New(log.Writer(), "Client unknown: ", log.LstdFlags),
+		logger:   pkglog.NewLogger("Client unknown: "),
 	}
 
 	return c, nil
+}
+
+func (c *WebSocketClient) SharedGameObjects() *server.SharedGameObjects {
+	return c.hub.SharedGameObjects
+}
+
+func (c *WebSocketClient) DbTx() *server.DbTx {
+	return c.dbTx
 }
 
 func (c *WebSocketClient) SetState(state server.ClientStateHandler) {

@@ -1,12 +1,23 @@
 package server
 
 import (
+	"context"
+	"database/sql"
 	"log"
 	"net/http"
 
-	objects "github.com/jxs1211/eatfat/internal/server/collection"
+	_ "embed"
+
+	_ "modernc.org/sqlite"
+
+	"github.com/jxs1211/eatfat/internal/server/collection"
+	"github.com/jxs1211/eatfat/internal/server/db"
+	"github.com/jxs1211/eatfat/internal/server/objects"
 	"github.com/jxs1211/eatfat/pkg/packets"
 )
+
+//go:embed db/config/schema.sql
+var schemaGenSql string
 
 // A structure for a state machine to process the client's messages
 type ClientStateHandler interface {
@@ -40,30 +51,60 @@ type ClientInterfacer interface {
 	WritePump()
 	// Close the client's connections and cleanup
 	Close(reason string)
+	DbTx() *DbTx
+	SharedGameObjects() *SharedGameObjects
 }
 
 // The hub is the central point of communication between all connected clients
 type Hub struct {
-	Clients *objects.SharedCollection[ClientInterfacer]
+	Clients           *collection.SharedCollection[ClientInterfacer]
+	SharedGameObjects *SharedGameObjects
 	// Packets in this channel will be processed by all connected clients except the sender
 	BroadcastChan chan *packets.Packet
 	// Clients in this channel will be registered with the hub
 	RegisterChan chan ClientInterfacer
 	// Clients in this channel will be unregistered with the hub
 	UnregisterChan chan ClientInterfacer
+	// Database connection pool
+	dbPool *sql.DB
+}
+
+// A structure for database transaction context
+type DbTx struct {
+	Ctx     context.Context
+	Queries *db.Queries
+}
+
+func (h *Hub) NewDbTx() *DbTx {
+	return &DbTx{
+		Ctx:     context.Background(),
+		Queries: db.New(h.dbPool),
+	}
 }
 
 func NewHub() *Hub {
+	dbPool, err := sql.Open("sqlite", "db.sqlite")
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &Hub{
-		Clients:        objects.NewSharedCollection[ClientInterfacer](),
+		Clients: collection.NewSharedCollection[ClientInterfacer](),
+		SharedGameObjects: &SharedGameObjects{
+			Players: collection.NewSharedCollection[*objects.Player](),
+		},
 		BroadcastChan:  make(chan *packets.Packet),
 		RegisterChan:   make(chan ClientInterfacer),
 		UnregisterChan: make(chan ClientInterfacer),
+		dbPool:         dbPool,
 	}
 }
 
 func (h *Hub) Run() {
-	log.Println("Awaiting client registrations")
+	if _, err := h.dbPool.ExecContext(context.Background(), schemaGenSql); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Initializing database done")
+
 	for {
 		select {
 		case client := <-h.RegisterChan:
@@ -94,4 +135,9 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 
 	go client.WritePump()
 	go client.ReadPump()
+}
+
+type SharedGameObjects struct {
+	// The ID of the player is the ID of the client
+	Players *collection.SharedCollection[*objects.Player]
 }

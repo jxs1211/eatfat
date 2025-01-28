@@ -12,21 +12,17 @@ config_version=5
 
 config/name="client"
 run/main_scene="res://main.tscn"
-config/features=PackedStringArray("4.3", "GL Compatibility")
+config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-WS="*res://websocket_client.gd"
+WS="*res://websockets.gd"
 GameManager="*res://game_manager.gd"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/protobuf/plugin.cfg")
-
-[global_group]
-
-res://game_manager.gd=""
 
 [rendering]
 

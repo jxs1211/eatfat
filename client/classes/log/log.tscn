@@ -1,4 +1,6 @@
-[gd_scene format=3 uid="uid://v63bf4phdtm6"]
+[gd_scene load_steps=2 format=3 uid="uid://qq06q3h7d84j"]
+
+[ext_resource type="Script" path="res://classes/log/log.gd" id="1_totav"]
 
 [node name="Log" type="RichTextLabel"]
 anchors_preset = 15
@@ -7,5 +9,5 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 bbcode_enabled = true
-text = "hello"
 scroll_following = true
+script = ExtResource("1_totav")

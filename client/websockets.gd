@@ -1,6 +1,11 @@
+class_name WebSocketClient
 extends Node
 
 const packets := preload("res://packets.gd")
+
+@export var handshake_headers: PackedStringArray
+@export var supported_protocols: PackedStringArray
+var tls_options: TLSOptions = null
 
 var socket := WebSocketPeer.new()
 var last_state := WebSocketPeer.STATE_CLOSED
@@ -9,7 +14,10 @@ signal connected_to_server()
 signal connection_closed()
 signal packet_received(packet: packets.Packet)
 
-func connect_to_url(url: String, tls_options: TLSOptions = null) -> int:
+func connect_to_url(url: String) -> int:
+	socket.supported_protocols = supported_protocols
+	socket.handshake_headers = handshake_headers
+
 	var err := socket.connect_to_url(url, tls_options)
 	if err != OK:
 		return err
@@ -27,15 +35,14 @@ func send(packet: packets.Packet) -> int:
 func get_packet() -> packets.Packet:
 	if socket.get_available_packet_count() < 1:
 		return null
-	
 	var data := socket.get_packet()
-	
 	var packet := packets.Packet.new()
 	var result := packet.from_bytes(data)
 	if result != OK:
-		printerr("Error forming packet from data %s" % data.get_string_from_utf8())
-	
+		printerr("Error formatting packet from data %s" % data.get_string_from_utf8())
+		
 	return packet
+
 
 func close(code: int = 1000, reason: String = "") -> void:
 	socket.close(code, reason)
