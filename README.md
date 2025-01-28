@@ -24,12 +24,19 @@ This project is a simple multiplayer game where players can compete to eat the m
 
 ### Details
 #### Server
-- ws: websocket
-- db: sqlite
-- auth: bcrypt
-- log: logrus
+
+- long connection: websocket
+- user management
+  - db: sqlite
+  - auth: bcrypt
+- chat
+  - broadcast
+- scoreboard
 - packet system
-- SharedCollection
+- gameplay
+  - generate spores
+  - player eat spores
+  - player movement
 
 ### architecture
 ![architecture](./architecture.svg)

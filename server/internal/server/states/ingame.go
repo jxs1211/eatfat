@@ -34,6 +34,7 @@ func (g *InGame) SetClient(client server.ClientInterfacer) {
 func (g *InGame) OnEnter() {
 	g.logger.Printf("Adding player %s to the shared collection", g.player.Name)
 	go g.client.SharedGameObjects().Players.Add(g.player, g.client.Id())
+
 	// Set the initial properties of the player
 	g.player.X = rand.Float64() * 1000
 	g.player.Y = rand.Float64() * 1000
@@ -41,6 +42,32 @@ func (g *InGame) OnEnter() {
 	g.player.Radius = 20.0
 	// Send the player's initial state to the client
 	g.client.SocketSend(packets.NewPlayer(g.client.Id(), g.player))
+	// Send the spores to the client in the background
+	go func() {
+		g.client.SharedGameObjects().Spores.ForEach(func(sporeId uint64, spore *objects.Spore) {
+			time.Sleep(5 * time.Millisecond)
+			g.client.SocketSend(packets.NewSpore(sporeId, spore))
+		})
+	}()
+	// or batch spores
+	// go g.sendInitialSpores(20, 50*time.Millisecond)
+}
+
+func (g *InGame) sendInitialSpores(batchSize int, delay time.Duration) {
+	sporesBatch := make(map[uint64]*objects.Spore, batchSize)
+	g.client.SharedGameObjects().Spores.ForEach(func(sporeId uint64, spore *objects.Spore) {
+		sporesBatch[sporeId] = spore
+		if len(sporesBatch) >= batchSize {
+			g.client.SocketSend(packets.NewSporesBatch(sporesBatch))
+			sporesBatch = make(map[uint64]*objects.Spore, batchSize)
+			time.Sleep(delay)
+		}
+	})
+	// send remaining spores
+	if len(sporesBatch) > 0 {
+		g.client.SocketSend(packets.NewSporesBatch(sporesBatch))
+	}
+	g.logger.Println("Sent initial spores done")
 }
 
 func (g *InGame) HandleMessage(senderId uint64, message packets.Msg) {
@@ -49,6 +76,24 @@ func (g *InGame) HandleMessage(senderId uint64, message packets.Msg) {
 		g.handlePlayer(senderId, message)
 	case *packets.Packet_PlayerDirection:
 		g.handlePlayerDirection(senderId, message)
+	case *packets.Packet_Chat:
+		g.handleChat(senderId, message)
+	case *packets.Packet_SporeConsumed:
+		g.handleSporeConsumed(senderId, message)
+	}
+}
+
+func (g *InGame) handleSporeConsumed(senderId uint64, message *packets.Packet_SporeConsumed) {
+	g.client.SharedGameObjects().Spores.Remove(message.SporeConsumed.SporeId)
+	g.logger.Printf("Spore %d consumed by client %d", message.SporeConsumed.SporeId, senderId)
+
+}
+
+func (g *InGame) handleChat(senderId uint64, message *packets.Packet_Chat) {
+	if senderId == g.client.Id() {
+		g.client.Broadcast(message)
+	} else {
+		g.client.SocketSendAs(message, senderId)
 	}
 }
 

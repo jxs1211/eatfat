@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"math/rand/v2"
 	"net/http"
 
 	_ "embed"
@@ -15,6 +16,8 @@ import (
 	"github.com/jxs1211/eatfat/internal/server/objects"
 	"github.com/jxs1211/eatfat/pkg/packets"
 )
+
+const MaxSpores int = 1000
 
 //go:embed db/config/schema.sql
 var schemaGenSql string
@@ -91,6 +94,7 @@ func NewHub() *Hub {
 		Clients: collection.NewSharedCollection[ClientInterfacer](),
 		SharedGameObjects: &SharedGameObjects{
 			Players: collection.NewSharedCollection[*objects.Player](),
+			Spores:  collection.NewSharedCollection[*objects.Spore](),
 		},
 		BroadcastChan:  make(chan *packets.Packet),
 		RegisterChan:   make(chan ClientInterfacer),
@@ -99,12 +103,21 @@ func NewHub() *Hub {
 	}
 }
 
+func (h *Hub) newSpore() *objects.Spore {
+	sporeRadius := max(rand.NormFloat64()*3+10, 5)
+	x, y := objects.SpawnCoords()
+	return &objects.Spore{X: x, Y: y, Radius: sporeRadius}
+}
+
 func (h *Hub) Run() {
 	if _, err := h.dbPool.ExecContext(context.Background(), schemaGenSql); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Initializing database done")
-
+	for i := 0; i < MaxSpores; i++ {
+		h.SharedGameObjects.Spores.Add(h.newSpore())
+	}
+	log.Println("Placing spores done")
 	for {
 		select {
 		case client := <-h.RegisterChan:
@@ -140,4 +153,5 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 type SharedGameObjects struct {
 	// The ID of the player is the ID of the client
 	Players *collection.SharedCollection[*objects.Player]
+	Spores  *collection.SharedCollection[*objects.Spore]
 }
