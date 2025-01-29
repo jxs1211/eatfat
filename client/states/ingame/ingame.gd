@@ -48,7 +48,27 @@ func _on_ws_packet_received(packet: packets.Packet) -> void:
 		_handle_player_msg(sender_id, packet.get_player())
 	elif packet.has_spore():
 		_handle_spore_msg(sender_id, packet.get_spore())
+	elif packet.has_spore_consumed():
+		_handle_spore_consumed_msg(sender_id, packet.get_spore_consumed())
 	
+func  _handle_spore_consumed_msg(sender_id: int, spore_consumed_msg: packets.SporeConsumedMessage) -> void:
+	if sender_id in _players:
+		var actor := _players[sender_id]
+		var actor_mass := _rad_to_mass(actor.radius)
+
+		var spore_id := spore_consumed_msg.get_spore_id()
+		if spore_id in _spores:
+			var spore := _spores[spore_id]
+			var spore_mass := _rad_to_mass(spore.radius)
+			_set_actor_mass(actor, actor_mass + spore_mass)
+			_remove_spore(spore)
+
+func _set_actor_mass(actor: Actor, new_mass: float) -> void:
+    actor.radius = sqrt(new_mass / PI)
+
+func _rad_to_mass(radius: float) -> float:
+    return radius * radius * PI
+
 func _handle_player_msg(_sender_id: int, player_msg: packets.PlayerMessage) -> void:
 	var actor_id := player_msg.get_id()
 	var actor_name := player_msg.get_name()
