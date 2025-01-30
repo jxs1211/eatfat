@@ -1,8 +1,6 @@
-package collection
+package objects
 
-import (
-	"sync"
-)
+import "sync"
 
 // A generic, thread-safe map of objects with auto-incrementing IDs.
 type SharedCollection[T any] struct {
@@ -32,18 +30,17 @@ func (s *SharedCollection[T]) Add(obj T, id ...uint64) uint64 {
 	s.mapMux.Lock()
 	defer s.mapMux.Unlock()
 
-	// create a user id randomly
-	// thisId := rand.Uint64()
 	thisId := s.nextId
 	if len(id) > 0 {
 		thisId = id[0]
 	}
+
 	s.objectsMap[thisId] = obj
 	s.nextId++
 	return thisId
 }
 
-// Remove removes an object from the map by ID, if it exists.
+// Remove removes an object from the map by ID, if it exists
 func (s *SharedCollection[T]) Remove(id uint64) {
 	s.mapMux.Lock()
 	defer s.mapMux.Unlock()
@@ -53,7 +50,7 @@ func (s *SharedCollection[T]) Remove(id uint64) {
 
 // Call the callback function for each object in the map.
 func (s *SharedCollection[T]) ForEach(callback func(uint64, T)) {
-	// Create a local copy while holding the lock.
+	// Create a local copy while holding the lock
 	s.mapMux.Lock()
 	localCopy := make(map[uint64]T, len(s.objectsMap))
 	for id, obj := range s.objectsMap {
@@ -61,24 +58,24 @@ func (s *SharedCollection[T]) ForEach(callback func(uint64, T)) {
 	}
 	s.mapMux.Unlock()
 
-	// Iterate over the local copy without holding the lock.
+	// Iterate over the local copy without holding the lock
 	for id, obj := range localCopy {
 		callback(id, obj)
 	}
 }
 
-// Get the object with the given ID, if it exists, otherwise nil.
+// Get an object with the given ID, if it exists, otherwise nil.
 // Also returns a boolean indicating whether the object was found.
 func (s *SharedCollection[T]) Get(id uint64) (T, bool) {
 	s.mapMux.Lock()
 	defer s.mapMux.Unlock()
 
-	obj, ok := s.objectsMap[id]
-	return obj, ok
+	obj, found := s.objectsMap[id]
+	return obj, found
 }
 
 // Get the approximate number of objects in the map.
-// The reason this is approximate is because we don't lock the map to get the length.
+// The reason this is approximate is because the map is read without holding the lock.
 func (s *SharedCollection[T]) Len() int {
 	return len(s.objectsMap)
 }

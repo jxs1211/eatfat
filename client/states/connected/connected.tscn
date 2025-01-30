@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://bm2gx3x3hu0al"]
+[gd_scene load_steps=3 format=3 uid="uid://5km44hs3bayt"]
 
 [ext_resource type="Script" path="res://states/connected/connected.gd" id="1_nv0uo"]
 [ext_resource type="Script" path="res://classes/log/log.gd" id="2_7x5jj"]

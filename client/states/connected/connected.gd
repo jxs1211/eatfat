@@ -35,6 +35,7 @@ func _on_login_button_pressed() -> void:
 	WS.send(packet)
 	_action_on_ok_received = func(): GameManager.set_state(GameManager.State.INGAME)
 	
+	
 func _on_register_button_pressed() -> void:
 	var packet := packets.Packet.new()
 	var register_request_msg := packet.new_register_request()

@@ -884,7 +884,7 @@ class DenyResponseMessage:
 	func _init():
 		var service
 		
-		_reason = PBField.new("reason", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
+		_reason = PBField.new("reason", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
 		service = PBServiceField.new()
 		service.field = _reason
 		data[_reason.tag] = service
@@ -895,300 +895,10 @@ class DenyResponseMessage:
 	func get_reason() -> String:
 		return _reason.value
 	func clear_reason() -> void:
-		data[2].state = PB_SERVICE_STATE.UNFILLED
+		data[1].state = PB_SERVICE_STATE.UNFILLED
 		_reason.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
 	func set_reason(value : String) -> void:
 		_reason.value = value
-	
-	func _to_string() -> String:
-		return PBPacker.message_to_string(data)
-		
-	func to_bytes() -> PackedByteArray:
-		return PBPacker.pack_message(data)
-		
-	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
-		var cur_limit = bytes.size()
-		if limit != -1:
-			cur_limit = limit
-		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
-		if result == cur_limit:
-			if PBPacker.check_required(data):
-				if limit == -1:
-					return PB_ERR.NO_ERRORS
-			else:
-				return PB_ERR.REQUIRED_FIELDS
-		elif limit == -1 && result > 0:
-			return PB_ERR.PARSE_INCOMPLETE
-		return result
-	
-class PlayerMessage:
-	func _init():
-		var service
-		
-		_id = PBField.new("id", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
-		service = PBServiceField.new()
-		service.field = _id
-		data[_id.tag] = service
-		
-		_name = PBField.new("name", PB_DATA_TYPE.STRING, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.STRING])
-		service = PBServiceField.new()
-		service.field = _name
-		data[_name.tag] = service
-		
-		_x = PBField.new("x", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _x
-		data[_x.tag] = service
-		
-		_y = PBField.new("y", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 4, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _y
-		data[_y.tag] = service
-		
-		_radius = PBField.new("radius", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 5, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _radius
-		data[_radius.tag] = service
-		
-		_direction = PBField.new("direction", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 6, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _direction
-		data[_direction.tag] = service
-		
-		_speed = PBField.new("speed", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 7, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _speed
-		data[_speed.tag] = service
-		
-	var data = {}
-	
-	var _id: PBField
-	func get_id() -> int:
-		return _id.value
-	func clear_id() -> void:
-		data[1].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
-	func set_id(value : int) -> void:
-		_id.value = value
-	
-	var _name: PBField
-	func get_name() -> String:
-		return _name.value
-	func clear_name() -> void:
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_name.value = DEFAULT_VALUES_3[PB_DATA_TYPE.STRING]
-	func set_name(value : String) -> void:
-		_name.value = value
-	
-	var _x: PBField
-	func get_x() -> float:
-		return _x.value
-	func clear_x() -> void:
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_x.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_x(value : float) -> void:
-		_x.value = value
-	
-	var _y: PBField
-	func get_y() -> float:
-		return _y.value
-	func clear_y() -> void:
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_y.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_y(value : float) -> void:
-		_y.value = value
-	
-	var _radius: PBField
-	func get_radius() -> float:
-		return _radius.value
-	func clear_radius() -> void:
-		data[5].state = PB_SERVICE_STATE.UNFILLED
-		_radius.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_radius(value : float) -> void:
-		_radius.value = value
-	
-	var _direction: PBField
-	func get_direction() -> float:
-		return _direction.value
-	func clear_direction() -> void:
-		data[6].state = PB_SERVICE_STATE.UNFILLED
-		_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_direction(value : float) -> void:
-		_direction.value = value
-	
-	var _speed: PBField
-	func get_speed() -> float:
-		return _speed.value
-	func clear_speed() -> void:
-		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_speed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_speed(value : float) -> void:
-		_speed.value = value
-	
-	func _to_string() -> String:
-		return PBPacker.message_to_string(data)
-		
-	func to_bytes() -> PackedByteArray:
-		return PBPacker.pack_message(data)
-		
-	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
-		var cur_limit = bytes.size()
-		if limit != -1:
-			cur_limit = limit
-		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
-		if result == cur_limit:
-			if PBPacker.check_required(data):
-				if limit == -1:
-					return PB_ERR.NO_ERRORS
-			else:
-				return PB_ERR.REQUIRED_FIELDS
-		elif limit == -1 && result > 0:
-			return PB_ERR.PARSE_INCOMPLETE
-		return result
-	
-class PlayerDirectionMessage:
-	func _init():
-		var service
-		
-		_direction = PBField.new("direction", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _direction
-		data[_direction.tag] = service
-		
-	var data = {}
-	
-	var _direction: PBField
-	func get_direction() -> float:
-		return _direction.value
-	func clear_direction() -> void:
-		data[1].state = PB_SERVICE_STATE.UNFILLED
-		_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_direction(value : float) -> void:
-		_direction.value = value
-	
-	func _to_string() -> String:
-		return PBPacker.message_to_string(data)
-		
-	func to_bytes() -> PackedByteArray:
-		return PBPacker.pack_message(data)
-		
-	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
-		var cur_limit = bytes.size()
-		if limit != -1:
-			cur_limit = limit
-		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
-		if result == cur_limit:
-			if PBPacker.check_required(data):
-				if limit == -1:
-					return PB_ERR.NO_ERRORS
-			else:
-				return PB_ERR.REQUIRED_FIELDS
-		elif limit == -1 && result > 0:
-			return PB_ERR.PARSE_INCOMPLETE
-		return result
-	
-class SporeMessage:
-	func _init():
-		var service
-		
-		_id = PBField.new("id", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
-		service = PBServiceField.new()
-		service.field = _id
-		data[_id.tag] = service
-		
-		_x = PBField.new("x", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 2, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _x
-		data[_x.tag] = service
-		
-		_y = PBField.new("y", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 3, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _y
-		data[_y.tag] = service
-		
-		_radius = PBField.new("radius", PB_DATA_TYPE.DOUBLE, PB_RULE.OPTIONAL, 4, true, DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE])
-		service = PBServiceField.new()
-		service.field = _radius
-		data[_radius.tag] = service
-		
-	var data = {}
-	
-	var _id: PBField
-	func get_id() -> int:
-		return _id.value
-	func clear_id() -> void:
-		data[1].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
-	func set_id(value : int) -> void:
-		_id.value = value
-	
-	var _x: PBField
-	func get_x() -> float:
-		return _x.value
-	func clear_x() -> void:
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_x.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_x(value : float) -> void:
-		_x.value = value
-	
-	var _y: PBField
-	func get_y() -> float:
-		return _y.value
-	func clear_y() -> void:
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_y.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_y(value : float) -> void:
-		_y.value = value
-	
-	var _radius: PBField
-	func get_radius() -> float:
-		return _radius.value
-	func clear_radius() -> void:
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_radius.value = DEFAULT_VALUES_3[PB_DATA_TYPE.DOUBLE]
-	func set_radius(value : float) -> void:
-		_radius.value = value
-	
-	func _to_string() -> String:
-		return PBPacker.message_to_string(data)
-		
-	func to_bytes() -> PackedByteArray:
-		return PBPacker.pack_message(data)
-		
-	func from_bytes(bytes : PackedByteArray, offset : int = 0, limit : int = -1) -> int:
-		var cur_limit = bytes.size()
-		if limit != -1:
-			cur_limit = limit
-		var result = PBPacker.unpack_message(data, bytes, offset, cur_limit)
-		if result == cur_limit:
-			if PBPacker.check_required(data):
-				if limit == -1:
-					return PB_ERR.NO_ERRORS
-			else:
-				return PB_ERR.REQUIRED_FIELDS
-		elif limit == -1 && result > 0:
-			return PB_ERR.PARSE_INCOMPLETE
-		return result
-	
-class SporeConsumedMessage:
-	func _init():
-		var service
-		
-		_spore_id = PBField.new("spore_id", PB_DATA_TYPE.UINT64, PB_RULE.OPTIONAL, 1, true, DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64])
-		service = PBServiceField.new()
-		service.field = _spore_id
-		data[_spore_id.tag] = service
-		
-	var data = {}
-	
-	var _spore_id: PBField
-	func get_spore_id() -> int:
-		return _spore_id.value
-	func clear_spore_id() -> void:
-		data[1].state = PB_SERVICE_STATE.UNFILLED
-		_spore_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.UINT64]
-	func set_spore_id(value : int) -> void:
-		_spore_id.value = value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
@@ -1256,30 +966,6 @@ class Packet:
 		service.func_ref = Callable(self, "new_deny_response")
 		data[_deny_response.tag] = service
 		
-		_player = PBField.new("player", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 8, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
-		service = PBServiceField.new()
-		service.field = _player
-		service.func_ref = Callable(self, "new_player")
-		data[_player.tag] = service
-		
-		_player_direction = PBField.new("player_direction", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 9, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
-		service = PBServiceField.new()
-		service.field = _player_direction
-		service.func_ref = Callable(self, "new_player_direction")
-		data[_player_direction.tag] = service
-		
-		_spore = PBField.new("spore", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 10, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
-		service = PBServiceField.new()
-		service.field = _spore
-		service.func_ref = Callable(self, "new_spore")
-		data[_spore.tag] = service
-		
-		_spore_consumed = PBField.new("spore_consumed", PB_DATA_TYPE.MESSAGE, PB_RULE.OPTIONAL, 11, true, DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE])
-		service = PBServiceField.new()
-		service.field = _spore_consumed
-		service.func_ref = Callable(self, "new_spore_consumed")
-		data[_spore_consumed.tag] = service
-		
 	var data = {}
 	
 	var _sender_id: PBField
@@ -1311,14 +997,6 @@ class Packet:
 		data[6].state = PB_SERVICE_STATE.UNFILLED
 		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_chat.value = ChatMessage.new()
 		return _chat.value
 	
@@ -1342,14 +1020,6 @@ class Packet:
 		data[6].state = PB_SERVICE_STATE.UNFILLED
 		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_id.value = IdMessage.new()
 		return _id.value
 	
@@ -1373,14 +1043,6 @@ class Packet:
 		data[6].state = PB_SERVICE_STATE.UNFILLED
 		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_login_request.value = LoginRequestMessage.new()
 		return _login_request.value
 	
@@ -1404,14 +1066,6 @@ class Packet:
 		data[6].state = PB_SERVICE_STATE.UNFILLED
 		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_register_request.value = RegisterRequestMessage.new()
 		return _register_request.value
 	
@@ -1435,14 +1089,6 @@ class Packet:
 		data[6].state = PB_SERVICE_STATE.FILLED
 		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_ok_response.value = OkResponseMessage.new()
 		return _ok_response.value
 	
@@ -1466,140 +1112,8 @@ class Packet:
 		_ok_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
 		data[6].state = PB_SERVICE_STATE.UNFILLED
 		data[7].state = PB_SERVICE_STATE.FILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
 		_deny_response.value = DenyResponseMessage.new()
 		return _deny_response.value
-	
-	var _player: PBField
-	func has_player() -> bool:
-		return data[8].state == PB_SERVICE_STATE.FILLED
-	func get_player() -> PlayerMessage:
-		return _player.value
-	func clear_player() -> void:
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-	func new_player() -> PlayerMessage:
-		_chat.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_register_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[5].state = PB_SERVICE_STATE.UNFILLED
-		_ok_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[6].state = PB_SERVICE_STATE.UNFILLED
-		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[7].state = PB_SERVICE_STATE.UNFILLED
-		data[8].state = PB_SERVICE_STATE.FILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = PlayerMessage.new()
-		return _player.value
-	
-	var _player_direction: PBField
-	func has_player_direction() -> bool:
-		return data[9].state == PB_SERVICE_STATE.FILLED
-	func get_player_direction() -> PlayerDirectionMessage:
-		return _player_direction.value
-	func clear_player_direction() -> void:
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-	func new_player_direction() -> PlayerDirectionMessage:
-		_chat.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_register_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[5].state = PB_SERVICE_STATE.UNFILLED
-		_ok_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[6].state = PB_SERVICE_STATE.UNFILLED
-		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		data[9].state = PB_SERVICE_STATE.FILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = PlayerDirectionMessage.new()
-		return _player_direction.value
-	
-	var _spore: PBField
-	func has_spore() -> bool:
-		return data[10].state == PB_SERVICE_STATE.FILLED
-	func get_spore() -> SporeMessage:
-		return _spore.value
-	func clear_spore() -> void:
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-	func new_spore() -> SporeMessage:
-		_chat.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_register_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[5].state = PB_SERVICE_STATE.UNFILLED
-		_ok_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[6].state = PB_SERVICE_STATE.UNFILLED
-		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		data[10].state = PB_SERVICE_STATE.FILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[11].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = SporeMessage.new()
-		return _spore.value
-	
-	var _spore_consumed: PBField
-	func has_spore_consumed() -> bool:
-		return data[11].state == PB_SERVICE_STATE.FILLED
-	func get_spore_consumed() -> SporeConsumedMessage:
-		return _spore_consumed.value
-	func clear_spore_consumed() -> void:
-		data[11].state = PB_SERVICE_STATE.UNFILLED
-		_spore_consumed.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-	func new_spore_consumed() -> SporeConsumedMessage:
-		_chat.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[2].state = PB_SERVICE_STATE.UNFILLED
-		_id.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[3].state = PB_SERVICE_STATE.UNFILLED
-		_login_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[4].state = PB_SERVICE_STATE.UNFILLED
-		_register_request.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[5].state = PB_SERVICE_STATE.UNFILLED
-		_ok_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[6].state = PB_SERVICE_STATE.UNFILLED
-		_deny_response.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[7].state = PB_SERVICE_STATE.UNFILLED
-		_player.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[8].state = PB_SERVICE_STATE.UNFILLED
-		_player_direction.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[9].state = PB_SERVICE_STATE.UNFILLED
-		_spore.value = DEFAULT_VALUES_3[PB_DATA_TYPE.MESSAGE]
-		data[10].state = PB_SERVICE_STATE.UNFILLED
-		data[11].state = PB_SERVICE_STATE.FILLED
-		_spore_consumed.value = SporeConsumedMessage.new()
-		return _spore_consumed.value
 	
 	func _to_string() -> String:
 		return PBPacker.message_to_string(data)
