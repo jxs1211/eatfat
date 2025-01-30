@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jxs1211/eatfat/internal/server"
+	"github.com/jxs1211/eatfat/internal/server/db"
 	"github.com/jxs1211/eatfat/internal/server/objects"
 	pkglog "github.com/jxs1211/eatfat/pkg/log"
 	"github.com/jxs1211/eatfat/pkg/packets"
@@ -118,8 +119,66 @@ func (g *InGame) handleSporeConsumed(senderId uint64, message *packets.Packet_Sp
 	g.player.Radius = g.nextRadius(sporeMass)
 
 	go g.client.SharedGameObjects().Spores.Remove(sporeId)
-
 	g.client.Broadcast(message)
+	go g.syncPlayerBestScore()
+}
+
+func (g *InGame) handlePlayerConsumed(senderId uint64, message *packets.Packet_PlayerConsumed) {
+	if senderId != g.client.Id() {
+		g.client.SocketSendAs(message, senderId)
+
+		if message.PlayerConsumed.PlayerId == g.client.Id() {
+			g.logger.Println("Player was consumed, respawning")
+			g.client.SetState(&InGame{
+				player: &objects.Player{
+					Name: g.player.Name,
+				},
+			})
+		}
+
+		return
+	}
+
+	// If the other player was supposedly consumed by our player, we need to verify the plausibility of the event
+	errMsg := "Could not verify player consumption: "
+
+	// First check if the player exists
+	otherId := message.PlayerConsumed.PlayerId
+	other, err := g.getOtherPlayer(otherId)
+	if err != nil {
+		g.logger.Println(errMsg + err.Error())
+		return
+	}
+
+	// Next, check if the other player is closed enough to be consumed
+	err = g.validatePlayerCloseToObject(other.X, other.Y, other.Radius, 10)
+	if err != nil {
+		g.logger.Println(errMsg + err.Error())
+		return
+	}
+
+	// Finally, check the other player's mass is less than our player's
+	ourMass := radToMass(g.player.Radius)
+	otherMass := radToMass(other.Radius)
+	if ourMass <= otherMass*1.5 {
+		g.logger.Printf(errMsg+"player not massive enough to consume the other player (our radius: %f, other radius: %f)", g.player.Radius, other.Radius)
+		return
+	}
+
+	// If we made it this far, the player consumption is valid, so grow the player, remove the consumed other, and broadcast the event
+	g.player.Radius = g.nextRadius(otherMass)
+
+	go g.client.SharedGameObjects().Players.Remove(otherId)
+	g.client.Broadcast(message)
+	go g.syncPlayerBestScore()
+}
+
+func (g *InGame) getOtherPlayer(playerId uint64) (*objects.Player, error) {
+	player, exists := g.client.SharedGameObjects().Players.Get(playerId)
+	if !exists {
+		return nil, fmt.Errorf("player with ID %d does not exist", playerId)
+	}
+	return player, nil
 }
 
 func (g *InGame) nextRadius(massDiff float64) float64 {
@@ -193,6 +252,7 @@ func (g *InGame) OnExit() {
 		g.cancelPlayerUpdateLoop()
 	}
 	g.client.SharedGameObjects().Players.Remove(g.client.Id())
+	go g.syncPlayerBestScore()
 }
 
 func (g *InGame) syncPlayer(delta float64) {
@@ -219,6 +279,20 @@ func (g *InGame) playerUpdateLoop(ctx context.Context) {
 			g.syncPlayer(delta)
 		case <-ctx.Done():
 			return
+		}
+	}
+}
+
+func (g *InGame) syncPlayerBestScore() {
+	currentScore := int64(math.Round(radToMass(g.player.Radius)))
+	if currentScore > g.player.BestScore {
+		g.player.BestScore = currentScore
+		err := g.client.DbTx().Queries.UpdatePlayerBestScore(g.client.DbTx().Ctx, db.UpdatePlayerBestScoreParams{
+			ID:        g.player.DbId,
+			BestScore: g.player.BestScore,
+		})
+		if err != nil {
+			g.logger.Printf("Error updating player best score: %v", err)
 		}
 	}
 }

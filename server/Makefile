@@ -1,4 +1,4 @@
-.PHONY: build run test clean protoc
+.PHONY: build run test clean protoc delete-db sqlc-generate
 
 # Build the server
 build:
@@ -19,3 +19,9 @@ clean:
 # Run the protoc to generate the go code from the proto file
 protoc:
 	protoc -I="shared" --go_out="server" "shared/packets.proto"
+
+delete-db:
+	rm -rf db.sqlite
+
+sqlc-generate:
+	sqlc generate -f internal/server/db/config/sqlc.yaml

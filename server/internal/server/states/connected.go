@@ -45,10 +45,16 @@ func (c *Connected) HandleMessage(senderId uint64, message packets.Msg) {
 		c.handleLoginRequest(senderId, message)
 	case *packets.Packet_RegisterRequest:
 		c.handleRegisterRequest(senderId, message)
+	case *packets.Packet_HiscoreBoardRequest:
+		c.handleHiscoreBoardRequest(senderId, message)
 	}
 }
 
 func (c *Connected) OnExit() {
+}
+
+func (c *Connected) handleHiscoreBoardRequest(senderId uint64, _ *packets.Packet_HiscoreBoardRequest) {
+	c.client.SetState(&BrowsingHiscores{})
 }
 
 func (c *Connected) handleLoginRequest(senderId uint64, message *packets.Packet_LoginRequest) {
@@ -58,28 +64,36 @@ func (c *Connected) handleLoginRequest(senderId uint64, message *packets.Packet_
 	}
 
 	username := message.LoginRequest.Username
-	genericFailMessage := packets.NewDenyResponse("Incorrect username or password")
 	if err := validateUsername(username); err != nil {
 		c.logger.Printf("Invalid username: %v", err)
-		c.client.SocketSend(genericFailMessage)
+		c.client.SocketSend(packets.NewDenyResponse("Invalid username"))
 		return
 	}
 	user, err := c.queries.GetUserByUsername(c.dbCtx, username)
 	if err != nil {
 		c.logger.Printf("Error getting user %s: %v", username, err)
-		c.client.SocketSend(genericFailMessage)
+		c.client.SocketSend(packets.NewDenyResponse("User not found"))
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(message.LoginRequest.Password))
 	if err != nil {
 		c.logger.Printf("User entered wrong password: %s", username)
-		c.client.SocketSend(genericFailMessage)
+		c.client.SocketSend(packets.NewDenyResponse("Incorrect username or password"))
+		return
+	}
+
+	player, err := c.queries.GetPlayerByUserID(c.dbCtx, user.ID)
+	if err != nil {
+		c.logger.Printf("Error getting player for user %s: %v", username, err)
+		c.client.SocketSend(packets.NewDenyResponse("Error getting player"))
 		return
 	}
 
 	c.client.SetState(&InGame{
 		player: &objects.Player{
-			Name: username,
+			Name:      player.Name,
+			DbId:      player.ID,
+			BestScore: player.BestScore,
 		},
 	})
 	c.logger.Printf("User %s logged in successfully", username)
@@ -119,17 +133,24 @@ func (c *Connected) handleRegisterRequest(senderId uint64, message *packets.Pack
 		return
 	}
 
-	_, err = c.queries.CreateUser(c.dbCtx, db.CreateUserParams{
+	user, err = c.queries.CreateUser(c.dbCtx, db.CreateUserParams{
 		Username:     username,
 		PasswordHash: string(passwordHash),
 	})
-
 	if err != nil {
 		c.logger.Printf("Failed to create user %s: %v", username, err)
 		c.client.SocketSend(genericFailMessage)
 		return
 	}
-
+	_, err = c.queries.CreatePlayer(c.dbCtx, db.CreatePlayerParams{
+		UserID: user.ID,
+		Name:   message.RegisterRequest.Username,
+	})
+	if err != nil {
+		c.logger.Printf("Failed to create player for user %s: %v", username, err)
+		c.client.SocketSend(genericFailMessage)
+		return
+	}
 	c.client.SocketSend(packets.NewOkResponse())
 
 	c.logger.Printf("User %s registered successfully", username)
