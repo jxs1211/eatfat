@@ -5,13 +5,18 @@ import (
 	"database/sql"
 	_ "embed"
 	"log"
+	"math/rand/v2"
 	"net/http"
+	"path"
 	"server/internal/server/db"
 	"server/internal/server/objects"
 	"server/pkg/packets"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
+
+const MaxSpores = 1000
 
 //go:embed db/config/schema.sql
 var schemaGenSql string
@@ -26,6 +31,12 @@ func (h *Hub) NewDbTx() *DbTx {
 		Ctx:     context.Background(),
 		Queries: db.New(h.dbPool),
 	}
+}
+
+type SharedGameObjects struct {
+	// The ID of the player is the ID of the client that owns it
+	Players *objects.SharedCollection[*objects.Player]
+	Spores  *objects.SharedCollection[*objects.Spore]
 }
 
 // A structure for a state machine to process the client's messages
@@ -72,6 +83,8 @@ type ClientInterfacer interface {
 	// A reference to the database transaction context for this client
 	DbTx() *DbTx
 
+	SharedGameObjects() *SharedGameObjects
+
 	// Close the client's connections and cleanup
 	Close(reason string)
 }
@@ -91,10 +104,12 @@ type Hub struct {
 
 	// Database connection pool
 	dbPool *sql.DB
+
+	SharedGameObjects *SharedGameObjects
 }
 
-func NewHub() *Hub {
-	dbPool, err := sql.Open("sqlite", "db.sqlite")
+func NewHub(dataDirPath string) *Hub {
+	dbPool, err := sql.Open("sqlite", path.Join(dataDirPath, "db.sqlite"))
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
@@ -105,6 +120,10 @@ func NewHub() *Hub {
 		RegisterChan:   make(chan ClientInterfacer),
 		UnregisterChan: make(chan ClientInterfacer),
 		dbPool:         dbPool,
+		SharedGameObjects: &SharedGameObjects{
+			Players: objects.NewSharedCollection[*objects.Player](),
+			Spores:  objects.NewSharedCollection[*objects.Spore](),
+		},
 	}
 }
 
@@ -113,6 +132,13 @@ func (h *Hub) Run() {
 	if _, err := h.dbPool.ExecContext(context.Background(), schemaGenSql); err != nil {
 		log.Fatalf("Error initializing database: %v", err)
 	}
+
+	log.Println("Placing spores...")
+	for i := 0; i < MaxSpores; i++ {
+		h.SharedGameObjects.Spores.Add(h.newSpore())
+	}
+
+	go h.replenishSporesLoop(2 * time.Second)
 
 	log.Println("Awaiting client registrations")
 	for {
@@ -144,4 +170,41 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 
 	go client.WritePump()
 	go client.ReadPump()
+}
+
+func (h *Hub) newSpore() *objects.Spore {
+	sporeRadius := max(10+rand.NormFloat64()*3, 5)
+	// x, y := objects.SpawnCoords(sporeRadius, h.SharedGameObjects.Players, h.SharedGameObjects.Spores)
+	x, y := 100.0, 100.0
+	return &objects.Spore{X: x, Y: y, Radius: sporeRadius}
+}
+
+func (h *Hub) replenishSporesLoop(rate time.Duration) {
+	ticker := time.NewTicker(rate)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		sporesRemaining := h.SharedGameObjects.Spores.Len()
+		diff := MaxSpores - sporesRemaining
+
+		if diff <= 0 {
+			continue
+		}
+
+		log.Printf("%d spores remain - going to replenish %d spores", sporesRemaining, diff)
+
+		// Don't really want to spawn too many at a time, otherwise it can cause lag spikes
+		for i := 0; i < min(diff, 10); i++ {
+			spore := h.newSpore()
+			sporeId := h.SharedGameObjects.Spores.Add(spore)
+
+			h.BroadcastChan <- &packets.Packet{
+				SenderId: 0,
+				Msg:      packets.NewSpore(sporeId, spore),
+			}
+
+			// Sleep a little bit to avoid lag spikes
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
 }

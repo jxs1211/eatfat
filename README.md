@@ -37,6 +37,11 @@ This project is a simple multiplayer game where players can compete to eat the m
   - generate spores
   - player eat spores
   - player movement
+- others
+  - player movement's coordinates calculation based on direction
+  - eating rule based on distance detection
+  - player's grow and reset
+  - spore's generation and deletion
 
 ### architecture
 ![architecture](./architecture.svg)

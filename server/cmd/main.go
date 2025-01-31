@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	// Define the game hub
-	hub := server.NewHub()
+	hub := server.NewHub("./")
 
 	// Define handler for WebSocket connections
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
