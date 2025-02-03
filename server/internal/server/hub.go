@@ -174,8 +174,7 @@ func (h *Hub) Serve(getNewClient func(*Hub, http.ResponseWriter, *http.Request) 
 
 func (h *Hub) newSpore() *objects.Spore {
 	sporeRadius := max(10+rand.NormFloat64()*3, 5)
-	// x, y := objects.SpawnCoords(sporeRadius, h.SharedGameObjects.Players, h.SharedGameObjects.Spores)
-	x, y := 100.0, 100.0
+	x, y := objects.SpawnCoords(sporeRadius, h.SharedGameObjects.Players, h.SharedGameObjects.Spores)
 	return &objects.Spore{X: x, Y: y, Radius: sporeRadius}
 }
 
